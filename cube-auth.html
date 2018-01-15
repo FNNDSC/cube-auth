@@ -1,0 +1,327 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/mixins/gesture-event-listeners.html">
+
+<link rel="import" href="../iron-image/iron-image.html">
+<link rel="import" href="../iron-pages/iron-pages.html">
+
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-card/paper-card.html">
+<link rel="import" href="../paper-input/paper-input.html">
+
+<link rel="import" href="../chips-api/chips-api.html">
+
+<dom-module id="cube-auth">
+  <template>
+    <style>
+      :host {
+        display: block;
+        max-width: 364px;
+      }
+      iron-image {
+        width: 150px;
+        height: 150px;
+        background: #fff;
+      }
+
+      .page {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .card-actions {
+        display: flex;
+      }
+
+      .spacer {
+        flex: 1;
+      }
+    </style>
+
+    <chips-api
+      id="API"
+      api="ultron"
+      api-root="[[serverIp]]:[[serverPort]]/[[serverNamespace]]">
+    </chips-api>
+
+    <iron-pages selected="[[page]]" attr-for-selected="page">
+
+      <!-- login card -->
+      <div class="page" page="login">
+        <paper-card >
+          <!-- header content -->
+          <div class="card-header">
+            <iron-image
+              preload
+              src="[[appLogo]]"
+              fade id="example-preload-image-2"
+              alt="The Polymer logo."
+              class="sized"
+              sizing="contain"></iron-image>
+              <div>[[appTitle]]</div>
+              <div>[[appSubTitle]]</div>
+          </div>
+
+          <!-- inputs -->
+          <div class="card-content">
+            <paper-input
+              id="username"
+              type="username"
+              value="{{username}}"
+              required
+              error-message="Username is required"
+              label="Username"
+              onfocusout="validate()"
+              on-keypress="keypressHandler"></paper-input>
+            <paper-input
+              id="password"
+              type="password"
+              value="{{password}}"
+              required
+              error-message="Password is required"
+              label="Password"
+              onfocusout="validate()"
+              on-keypress="keypressHandler"></paper-input>
+          </div>
+
+          <!-- actions -->
+          <div class="card-actions">
+            <paper-button on-tap="signupPage">Sign up</paper-button>
+            <div class="spacer"></div>
+            <paper-button on-tap="login">Log in</paper-button>
+          </div>
+
+        </paper-card>
+
+        <paper-button on-tap="forgotPage">Forgot my password</paper-button>
+      </div>
+
+      <!-- signup page -->
+      <div class="page" page="signup">
+        <paper-card >
+          <!-- header content -->
+          <div class="card-header">
+            <iron-image
+              preload
+              src="[[appLogo]]"
+              fade id="example-preload-image-2"
+              alt="The Polymer logo."
+              class="sized"
+              sizing="contain"></iron-image>
+              <div>[[appTitle]]</div>
+              <div>[[appSubTitle]]</div>
+          </div>
+
+          <!-- inputs -->
+          <div class="card-content">
+            <paper-input
+              id="email"
+              type="email"
+              value="{{email}}"
+              required
+              error-message="Email is required"
+              label="Email"
+              onfocusout="validate()"
+              on-keypress="keypressHandler"></paper-input>
+            <paper-input
+              id="username"
+              type="username"
+              value="{{username}}"
+              required
+              error-message="Username is required"
+              label="Username"
+              onfocusout="validate()"
+              on-keypress="keypressHandler"></paper-input>
+            <paper-input
+              id="password"
+              type="password"
+              value="{{password}}"
+              required
+              error-message="Password is required"
+              label="Password"
+              onfocusout="validate()"
+              on-keypress="keypressHandler"></paper-input>
+          </div>
+
+          <!-- actions -->
+          <div class="card-actions">
+            <paper-button on-tap="loginPage">Back</paper-button>
+            <div class="spacer"></div>
+            <paper-button on-tap="signup">Sign up</paper-button>
+          </div>
+  
+        </paper-card>
+      </div>
+
+      <!-- forgot page -->
+      <div class="page" page="forgot">
+        <paper-card >
+          <!-- header content -->
+          <div class="card-header">
+            <iron-image
+              preload
+              src="[[appLogo]]"
+              fade id="example-preload-image-2"
+              alt="The Polymer logo."
+              class="sized"
+              sizing="contain"></iron-image>
+              <div>[[appTitle]]</div>
+              <div>[[appSubTitle]]</div>
+          </div>
+
+          <!-- inputs -->
+          <div class="card-content">
+            <paper-input
+              id="email"
+              type="email"
+              value="{{email}}"
+              required
+              error-message="Email is required"
+              label="Email"
+              onfocusout="validate()"
+              on-keypress="keypressHandler"></paper-input>
+          </div>
+
+          <!-- actions -->
+          <div class="card-actions">
+            <paper-button on-tap="loginPage">Back</paper-button>
+            <div class="spacer"></div>
+            <paper-button on-tap="signup">Reset password</paper-button>
+          </div>
+    
+        </paper-card>
+      </div>
+
+    </iron-pages>
+  </template>
+
+  <script>
+    /**
+     * `cube-auth`
+     * Element to login against CUBE
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class CubeAuth extends Polymer.GestureEventListeners(Polymer.Element) {
+      static get is() { return 'cube-auth'; }
+      static get properties() {
+        return {
+          appLogo: {
+            String,
+            value: 'https://cdn.rawgit.com/FNNDSC/fnndsc.babymri.org/7e55e818/images/art/logo_gray_white_bg.png',
+          },
+          appTitle: {
+            String,
+            value: 'Welcome to CUBE',
+          },
+          appSubTitle: {
+            String,
+            value: 'Please log in.',
+          },
+          email: {
+            type: String,
+            value: 'chris@test.com',
+          },
+          username: {
+            type: String,
+            value: 'chris',
+          },
+          password: {
+            type: String,
+            value: 'chris',
+          },
+          token: {
+            type: String,
+            value: 'iamthetoken',
+          },
+          serverIp: {
+            type: String,
+            value: '',
+            observer: '_serverAddressChanged',
+          },
+          serverPort: {
+            type: String,
+            value: '',
+            observer: '_serverAddressChanged',
+          },
+          serverNamespace: {
+            type: String,
+            value: '',
+            observer: '_serverAddressChanged',
+          },
+          page: {
+            type: String,
+            value: 'login',
+          },
+          online: {
+            type: Boolean,
+            value: false,
+          },
+        };
+      }
+
+      keypressHandler(evt) {
+        if (evt.charCode === 13) {
+          // try to log in
+          this.login();
+        }
+      }
+
+      login() {
+        this.$.username.validate();
+        this.$.password.validate();
+        if (!this.$.username.invalid &&
+            !this.$.password.invalid) {
+          // prepare data
+          const data = {};
+          data.auth = {
+            type: 'none',
+          };
+          data.body = {
+            'username': this.username,
+            'password': this.password,
+          };
+          // need to pass username and password
+          const request = this.$.API.request('POST', 'login', data);
+          request
+            .then(this.handleResponse.bind(this))
+            .catch(this.handleError.bind(this));
+          }
+      }
+
+      _serverAddressChanged() {
+        // just ping server to make sure it is online
+        console.log(`${this.serverIp}:${this.serverPort}/${this.serverNamespace}`);
+      }
+
+      handleResponse(response) {
+        console.log(response);
+      }
+
+      handleError(error) {
+        console.log(error);
+      }
+
+      loginPage() {
+        this.page = 'login';
+      }
+
+      signupPage() {
+        this.page = 'signup';
+      }
+
+      forgotPage() {
+        this.page = 'forgot';
+      }
+    }
+
+    window.customElements.define(CubeAuth.is, CubeAuth);
+  </script>
+</dom-module>

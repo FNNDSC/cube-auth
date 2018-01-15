@@ -1,0 +1,22 @@
+{
+  "name": "cube-auth",
+  "description": "Element to login against CUBE",
+  "main": "cube-auth.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^2.0.0",
+    "iron-image": "^2.1.2",
+    "paper-card": "polymerelements/paper-card#^2.0.0",
+    "paper-button": "polymerelements/paper-button#^2.0.0",
+    "paper-input": "polymerelements/paper-input#^2.0.5",
+    "iron-pages": "polymerelements/iron-pages#^2.0.1",
+    "chips-api": "fnndsc/chips-api"
+  },
+  "devDependencies": {
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
+    "web-component-tester": "Polymer/web-component-tester#^6.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0"
+  },
+  "resolutions": {
+    "polymer": "^2.0.0"
+  }
+}
