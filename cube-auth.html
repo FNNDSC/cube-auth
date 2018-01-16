@@ -1,11 +1,13 @@
 <link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../polymer/lib/mixins/gesture-event-listeners.html">
 
+<link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../iron-image/iron-image.html">
 <link rel="import" href="../iron-pages/iron-pages.html">
 
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-card/paper-card.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../paper-input/paper-input.html">
 
 <link rel="import" href="../chips-api/chips-api.html">
@@ -64,13 +66,12 @@
               class="sized"
               sizing="contain"></iron-image>
               <div>[[appTitle]]</div>
-              <div>[[appSubTitle]]</div>
           </div>
 
           <!-- inputs -->
           <div class="card-content">
             <paper-input
-              id="username"
+              id="usernameL"
               type="username"
               value="{{username}}"
               required
@@ -79,14 +80,22 @@
               onfocusout="validate()"
               on-keypress="keypressHandler"></paper-input>
             <paper-input
-              id="password"
-              type="password"
+              id="passwordL"
+              type$="[[passwordInputType(passwordVisible)]]"
               value="{{password}}"
               required
               error-message="Password is required"
               label="Password"
               onfocusout="validate()"
-              on-keypress="keypressHandler"></paper-input>
+              on-keypress="keypressHandler">
+            
+              <paper-icon-button
+                slot="suffix"
+                on-tap="togglePasswordVisibility"
+                icon$="[[passwordInputIcon(passwordVisible)]]" alt="clear" title="clear">
+              </paper-icon-button>
+
+            </paper-input>
           </div>
 
           <!-- actions -->
@@ -114,13 +123,12 @@
               class="sized"
               sizing="contain"></iron-image>
               <div>[[appTitle]]</div>
-              <div>[[appSubTitle]]</div>
           </div>
 
           <!-- inputs -->
           <div class="card-content">
             <paper-input
-              id="email"
+              id="emailS"
               type="email"
               value="{{email}}"
               required
@@ -129,7 +137,7 @@
               onfocusout="validate()"
               on-keypress="keypressHandler"></paper-input>
             <paper-input
-              id="username"
+              id="usernameS"
               type="username"
               value="{{username}}"
               required
@@ -138,14 +146,28 @@
               onfocusout="validate()"
               on-keypress="keypressHandler"></paper-input>
             <paper-input
-              id="password"
-              type="password"
+              id="passwordS"
+              type$="[[passwordInputType(passwordVisible)]]"
               value="{{password}}"
               required
               error-message="Password is required"
               label="Password"
               onfocusout="validate()"
-              on-keypress="keypressHandler"></paper-input>
+              on-keypress="keypressHandler">
+              <paper-icon-button
+                slot="suffix"
+                on-tap="togglePasswordVisibility"
+                icon$="[[passwordInputIcon(passwordVisible)]]" alt="clear" title="clear">
+              </paper-icon-button>
+            </paper-input>
+            <paper-input
+              id="passwordConfirmationS"
+              type="password"
+              value="{{passwordConfirmation}}"
+              required
+              error-message="Password is required"
+              label="Confirm Password"
+              on-keyup="passwordConfirmationHandler"></paper-input>
           </div>
 
           <!-- actions -->
@@ -171,13 +193,12 @@
               class="sized"
               sizing="contain"></iron-image>
               <div>[[appTitle]]</div>
-              <div>[[appSubTitle]]</div>
           </div>
 
           <!-- inputs -->
           <div class="card-content">
             <paper-input
-              id="email"
+              id="emailF"
               type="email"
               value="{{email}}"
               required
@@ -191,7 +212,7 @@
           <div class="card-actions">
             <paper-button on-tap="loginPage">Back</paper-button>
             <div class="spacer"></div>
-            <paper-button on-tap="signup">Reset password</paper-button>
+            <paper-button on-tap="forgot">Reset password</paper-button>
           </div>
     
         </paper-card>
@@ -215,27 +236,31 @@
         return {
           appLogo: {
             String,
-            value: 'https://cdn.rawgit.com/FNNDSC/fnndsc.babymri.org/7e55e818/images/art/logo_gray_white_bg.png',
+            value: '',
           },
           appTitle: {
             String,
-            value: 'Welcome to CUBE',
-          },
-          appSubTitle: {
-            String,
-            value: 'Please log in.',
+            value: '',
           },
           email: {
             type: String,
-            value: 'chris@test.com',
+            value: '',
           },
           username: {
             type: String,
-            value: 'chris',
+            value: '',
           },
           password: {
             type: String,
-            value: 'chris',
+            value: '',
+          },
+          passwordConfirmation: {
+            type: String,
+            value: '',
+          },
+          passwordVisible: {
+            type: Boolean,
+            value: false,
           },
           token: {
             type: String,
@@ -275,10 +300,10 @@
       }
 
       login() {
-        this.$.username.validate();
-        this.$.password.validate();
-        if (!this.$.username.invalid &&
-            !this.$.password.invalid) {
+        this.$.usernameL.validate();
+        this.$.passwordL.validate();
+        if (!this.$.usernameL.invalid &&
+            !this.$.passwordL.invalid) {
           // prepare data
           const data = {};
           data.auth = {
@@ -290,10 +315,36 @@
           };
           // need to pass username and password
           const request = this.$.API.request('POST', 'login', data);
+
+          // behavior on invalid login?
           request
             .then(this.handleResponse.bind(this))
             .catch(this.handleError.bind(this));
           }
+      }
+
+      signup() {
+        this.$.emailS.validate();
+        this.$.usernameS.validate();
+        this.$.passwordS.validate();
+        this.$.passwordConfirmationS.validate();
+        if (!this.$.emailS.invalid &&
+            !this.$.usernameS.invalid &&
+            !this.$.passwordS.invalid &&
+            !this.$.passwordConfirmationS.invalid) {
+          console.log('go signup!');
+          // then
+          this.loginPage();
+        }
+      }
+
+      forgot() {
+        this.$.emailF.validate();
+        if (!this.$.emailF.invalid) {
+          console.log('go forgot!');
+          // then
+          this.loginPage();
+        }
       }
 
       _serverAddressChanged() {
@@ -310,15 +361,40 @@
       }
 
       loginPage() {
+        this.resetPassword();
         this.page = 'login';
       }
 
       signupPage() {
+        this.resetPassword();
         this.page = 'signup';
       }
 
       forgotPage() {
+        this.resetPassword();
         this.page = 'forgot';
+      }
+
+      resetPassword() {
+        this.passwordVisible = false;
+        this.password= '';
+        this.passwordConfirmation = '';
+      }
+
+      togglePasswordVisibility() {
+        this.passwordVisible = !this.passwordVisible;
+      }
+
+      passwordInputIcon(visible) {
+        return visible ? 'icons:visibility-off' : 'icons:visibility';
+      }
+
+      passwordInputType(visible) {
+        return visible ? 'text' : 'password';
+      }
+
+      passwordConfirmationHandler() {
+        this.$.passwordConfirmationS.invalid = this.password !== this.passwordConfirmation;
       }
     }
 
