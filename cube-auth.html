@@ -66,6 +66,8 @@
               class="sized"
               sizing="contain"></iron-image>
               <div>[[appTitle]]</div>
+              <div>Login</div>
+              <div>[[errorMessage]]</div>
           </div>
 
           <!-- inputs -->
@@ -123,6 +125,7 @@
               class="sized"
               sizing="contain"></iron-image>
               <div>[[appTitle]]</div>
+              <div>Sign up</div>
           </div>
 
           <!-- inputs -->
@@ -193,6 +196,7 @@
               class="sized"
               sizing="contain"></iron-image>
               <div>[[appTitle]]</div>
+              <div>Forgot password</div>
           </div>
 
           <!-- inputs -->
@@ -235,11 +239,15 @@
       static get properties() {
         return {
           appLogo: {
-            String,
+            type: String,
             value: '',
           },
           appTitle: {
-            String,
+            type: String,
+            value: '',
+          },
+          errorMessage: {
+            type: String,
             value: '',
           },
           email: {
@@ -341,7 +349,6 @@
       forgot() {
         this.$.emailF.validate();
         if (!this.$.emailF.invalid) {
-          console.log('go forgot!');
           // then
           this.loginPage();
         }
@@ -354,10 +361,12 @@
 
       handleResponse(response) {
         console.log(response);
+        // dispatch event with auth info
       }
 
       handleError(error) {
         console.log(error);
+        this.errorMessage = 'oh no!';
       }
 
       loginPage() {
@@ -367,6 +376,7 @@
 
       signupPage() {
         this.resetPassword();
+        this.errorMessage = '';
         this.page = 'signup';
       }
 
@@ -396,6 +406,9 @@
       passwordConfirmationHandler() {
         this.$.passwordConfirmationS.invalid = this.password !== this.passwordConfirmation;
       }
+
+      // disable buttons while performing a network request
+      // expose property "contacting/etc."
     }
 
     window.customElements.define(CubeAuth.is, CubeAuth);
