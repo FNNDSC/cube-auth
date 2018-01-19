@@ -50,7 +50,6 @@
       api="ultron"
       api-root="[[serverIp]]:[[serverPort]]/[[serverNamespace]]">
     </chips-api>
-
     <iron-pages selected="[[page]]" attr-for-selected="page">
 
       <!-- login card -->
@@ -321,6 +320,7 @@
             'username': this.username,
             'password': this.password,
           };
+
           // need to pass username and password
           const request = this.$.API.request('POST', 'login', data);
 
@@ -340,9 +340,31 @@
             !this.$.usernameS.invalid &&
             !this.$.passwordS.invalid &&
             !this.$.passwordConfirmationS.invalid) {
-          console.log('go signup!');
-          // then
-          this.loginPage();
+
+          // prepare data
+          const data = {};
+          data.auth = {
+            type: 'none',
+          };
+          data.body = {};
+          data.body.template = {};
+          data.body.template.data = [
+            {name: 'username', value: ''},
+            {name: 'password', value: ''},
+          ];
+          data.body.data = {};
+          data.body.data['username'] = this.username;
+          data.body.data['password'] = this.password;
+          
+          // need to pass username and password
+          const request = this.$.API.request('POST', 'users', data);
+          request
+            .then((response) => {
+              this.loginPage();
+            })
+            .catch((error) => {
+              console.log(error)
+            });
         }
       }
 
