@@ -16,6 +16,7 @@
   <template>
     <style>
       :host {
+        /* --paper-input-container-color: var(--app-primary-color, red); */
         display: block;
         max-width: 364px;
       }
@@ -28,6 +29,13 @@
       .page {
         display: flex;
         flex-direction: column;
+      }
+
+      .error-message {
+        padding: 10px 10px 0;
+        text-align: center;
+        font-size: 14px;
+        color: #e57373;
       }
 
       .card-header {
@@ -65,8 +73,8 @@
               class="sized"
               sizing="contain"></iron-image>
               <div>[[appTitle]]</div>
-              <div>Login</div>
-              <div>[[errorMessage]]</div>
+              <div>[[loginLabel]]</div>
+              <div class="error-message">[[errorMessage]]</div>
           </div>
 
           <!-- inputs -->
@@ -79,7 +87,7 @@
               error-message="Username is required"
               label="Username"
               onfocusout="validate()"
-              on-keypress="keypressHandler"></paper-input>
+              on-keypress="keypressLoginHandler"></paper-input>
             <paper-input
               id="passwordL"
               type$="[[passwordInputType(passwordVisible)]]"
@@ -88,7 +96,7 @@
               error-message="Password is required"
               label="Password"
               onfocusout="validate()"
-              on-keypress="keypressHandler">
+              on-keypress="keypressLoginHandler">
             
               <paper-icon-button
                 slot="suffix"
@@ -124,7 +132,8 @@
               class="sized"
               sizing="contain"></iron-image>
               <div>[[appTitle]]</div>
-              <div>Sign up</div>
+              <div>[[signupLabel]]</div>
+              <div class="error-message">[[errorMessage]]</div>
           </div>
 
           <!-- inputs -->
@@ -137,7 +146,7 @@
               error-message="Email is required"
               label="Email"
               onfocusout="validate()"
-              on-keypress="keypressHandler"></paper-input>
+              on-keypress="keypressSignupHandler"></paper-input>
             <paper-input
               id="usernameS"
               type="username"
@@ -146,16 +155,18 @@
               error-message="Username is required"
               label="Username"
               onfocusout="validate()"
-              on-keypress="keypressHandler"></paper-input>
+              on-keypress="keypressSignupHandler"></paper-input>
             <paper-input
               id="passwordS"
               type$="[[passwordInputType(passwordVisible)]]"
               value="{{password}}"
               required
-              error-message="Password is required"
-              label="Password"
-              onfocusout="validate()"
-              on-keypress="keypressHandler">
+              error-message="Password must have at least 6 characters"
+              label="Password (more than 6 characters)"
+              onfocusout="[[passwordLengthHandler]]"
+              on-keypress="keypressSignupHandler"
+              on-keyup="passwordLengthHandler"
+              char-counter>
               <paper-icon-button
                 slot="suffix"
                 on-tap="togglePasswordVisibility"
@@ -167,9 +178,11 @@
               type="password"
               value="{{passwordConfirmation}}"
               required
-              error-message="Password is required"
+              error-message="Confirmation does not match password"
               label="Confirm Password"
-              on-keyup="passwordConfirmationHandler"></paper-input>
+              on-keypress="keypressSignupHandler"
+              on-keyup="passwordConfirmationHandler"
+              onfocusout="[[passwordConfirmationHandler]]"></paper-input>
           </div>
 
           <!-- actions -->
@@ -195,7 +208,8 @@
               class="sized"
               sizing="contain"></iron-image>
               <div>[[appTitle]]</div>
-              <div>Forgot password</div>
+              <div>[[forgotLabel]]</div>
+              <div class="error-message">[[errorMessage]]</div>
           </div>
 
           <!-- inputs -->
@@ -245,6 +259,18 @@
             type: String,
             value: '',
           },
+          loginLabel: {
+            type: String,
+            value: 'Welcome, please log in',
+          },
+          signupLabel: {
+            type: String,
+            value: 'Create an account',
+          },
+          forgotLabel: {
+            type: String,
+            value: 'Recover a password',
+          },
           errorMessage: {
             type: String,
             value: '',
@@ -269,10 +295,6 @@
             type: Boolean,
             value: false,
           },
-          token: {
-            type: String,
-            value: 'iamthetoken',
-          },
           serverIp: {
             type: String,
             value: '',
@@ -291,6 +313,7 @@
           page: {
             type: String,
             value: 'login',
+            observer: '_pageChanged',
           },
           online: {
             type: Boolean,
@@ -299,14 +322,22 @@
         };
       }
 
-      keypressHandler(evt) {
+      keypressLoginHandler(evt) {
         if (evt.charCode === 13) {
           // try to log in
           this.login();
         }
       }
 
+      keypressSignupHandler(evt) {
+        if (evt.charCode === 13) {
+          // try to sign up
+          this.signup();
+        }
+      }
+
       login() {
+        // confirm all fields
         this.$.usernameL.validate();
         this.$.passwordL.validate();
         if (!this.$.usernameL.invalid &&
@@ -336,11 +367,12 @@
         this.$.usernameS.validate();
         this.$.passwordS.validate();
         this.$.passwordConfirmationS.validate();
+        // make sure we have at least 6 characters
+        this.passwordLengthHandler();
         if (!this.$.emailS.invalid &&
             !this.$.usernameS.invalid &&
             !this.$.passwordS.invalid &&
             !this.$.passwordConfirmationS.invalid) {
-
           // prepare data
           const data = {};
           data.auth = {
@@ -355,16 +387,15 @@
           data.body.data = {};
           data.body.data['username'] = this.username;
           data.body.data['password'] = this.password;
-          
+
           // need to pass username and password
+          // add users in chris api
           const request = this.$.API.request('POST', 'users', data);
           request
             .then((response) => {
               this.loginPage();
             })
-            .catch((error) => {
-              console.log(error)
-            });
+            .catch(this.handleError.bind(this));
         }
       }
 
@@ -382,29 +413,67 @@
       }
 
       handleResponse(response) {
-        console.log(response);
-        // dispatch event with auth info
+        // add username in event for convenience
+        response.username = this.username;
+        this.dispatchEvent(
+          new CustomEvent('login', {detail: response}));
+
+        // cleanup all vars
+        this._resetProperties();
       }
 
       handleError(error) {
-        console.log(error);
-        this.errorMessage = 'oh no!';
+        switch (error.status) {
+          case 0:
+            this.errorMessage = 'Server is down, please contact dev@babymri.org.';
+            break;
+          case 400:
+            this.errorMessage =
+              this.generateErrorMessageFromResponse(error.response);
+            break;
+          default:
+            this.errorMessage = `Unknown error ${error.status} ':(`;
+            break; 
+        }
+      }
+
+      generateErrorMessageFromResponse(response) {
+        if ('non_field_errors' in response) {
+          return response.non_field_errors;
+        }
+
+        const errorStringMessage = response.collection.error.message.replace(/\'/g, '"');
+        const error = JSON.parse(errorStringMessage);
+        if ('username' in error) {
+          return 'The username you provided is already taken.'
+        }
+
+        if ('password' in error) {
+          return 'The password must be at least 6 characters long.'
+        }
       }
 
       loginPage() {
-        this.resetPassword();
         this.page = 'login';
       }
 
       signupPage() {
-        this.resetPassword();
-        this.errorMessage = '';
         this.page = 'signup';
       }
 
       forgotPage() {
-        this.resetPassword();
         this.page = 'forgot';
+      }
+
+      _pageChanged() {
+        this._resetProperties();
+      }
+
+      _resetProperties() {
+        this.email = '';
+        this.username = '';
+        this.resetPassword();
+        this.errorMessage = '';
       }
 
       resetPassword() {
@@ -427,6 +496,11 @@
 
       passwordConfirmationHandler() {
         this.$.passwordConfirmationS.invalid = this.password !== this.passwordConfirmation;
+      }
+
+      passwordLengthHandler() {
+        this.$.passwordS.invalid = this.password.length < 6;
+        this.passwordConfirmationHandler();
       }
 
       // disable buttons while performing a network request
