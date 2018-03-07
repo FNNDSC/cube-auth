@@ -381,10 +381,12 @@
           data.body = {};
           data.body.template = {};
           data.body.template.data = [
+            {name: 'email', value: ''},
             {name: 'username', value: ''},
             {name: 'password', value: ''},
           ];
           data.body.data = {};
+          data.body.data['email'] = this.email;
           data.body.data['username'] = this.username;
           data.body.data['password'] = this.password;
 
