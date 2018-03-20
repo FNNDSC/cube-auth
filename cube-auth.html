@@ -21,8 +21,6 @@
         max-width: 364px;
       }
       iron-image {
-        width: 150px;
-        height: 150px;
         background: #fff;
       }
 
@@ -51,6 +49,10 @@
       .spacer {
         flex: 1;
       }
+
+      [hidden] {
+        display: none;
+      }
     </style>
 
     <chips-api
@@ -71,7 +73,8 @@
               fade id="example-preload-image-2"
               alt="The Polymer logo."
               class="sized"
-              sizing="contain"></iron-image>
+              sizing="contain"
+              style$="width:[[logoWidth]]; height:[[logoHeight]]"></iron-image>
               <div>[[appTitle]]</div>
               <div>[[loginLabel]]</div>
               <div class="error-message">[[errorMessage]]</div>
@@ -116,7 +119,7 @@
 
         </paper-card>
 
-        <paper-button on-tap="forgotPage">Forgot my password</paper-button>
+        <paper-button hidden$="[[hideResetButton]]" on-tap="forgotPage">Forgot my password</paper-button>
       </div>
 
       <!-- signup page -->
@@ -255,6 +258,14 @@
             type: String,
             value: '',
           },
+          logoWidth: {
+            type: String,
+            value: '150px',
+          },
+          logoHeight: {
+            type: String,
+            value: '150px',
+          },
           appTitle: {
             type: String,
             value: '',
@@ -316,6 +327,10 @@
             observer: '_pageChanged',
           },
           online: {
+            type: Boolean,
+            value: false,
+          },
+          hideResetButton: {
             type: Boolean,
             value: false,
           },
